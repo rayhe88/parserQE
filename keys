@@ -1,0 +1,35 @@
+
+     number of atoms/cell      =           30
+     number of atomic types    =            3
+     number of electrons       =       529.00
+     number of Kohn-Sham states=          318
+     kinetic-energy cutoff     =      60.0000  Ry
+     charge density cutoff     =     240.0000  Ry
+     scf convergence threshold =      1.0E-08
+
+     lattice parameter (alat)  =      14.3146  a.u.
+     unit-cell volume          =   10101.6116 (a.u.)^3
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (   1.000000   0.000000   0.000000 )  
+               a(2) = (   0.500000   0.866025   0.000000 )  
+               a(3) = (   0.000000   0.000000   3.976691 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = (  1.000000 -0.577350  0.000000 )  
+               b(2) = (  0.000000  1.154701  0.000000 )  
+               b(3) = (  0.000000  0.000000  0.251465 )
+
+     the Fermi energy is    -0.0175 ev
+
+!    total energy              =   -9968.35004278 Ry
+     one-electron contribution = -119807.41527125 Ry
+     hartree contribution      =   59867.28988966 Ry
+     xc contribution           =    -996.13937619 Ry
+     ewald contribution        =   50967.92228252 Ry	
+
+     convergence has been achieved in  25 iterations
+
+
+     
+
