@@ -1,7 +1,7 @@
 
-     number of atoms/cell      =           30
+     number of atoms/cell      =           30   		[listo]
      number of atomic types    =            3
-     number of electrons       =       529.00
+     number of electrons       =       529.00			[listo]
      number of Kohn-Sham states=          318
      kinetic-energy cutoff     =      60.0000  Ry
      charge density cutoff     =     240.0000  Ry
