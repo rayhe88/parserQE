@@ -309,12 +309,14 @@ def get_sumband_wall_time(text):
     return None
 
 def isJobDone(text):
+    done = False
     for line in text:
         x = re.search(r"JOB DONE", line)
         if x is not None:
-            return True
+            done = True
             break
-    return False
+    
+    return done
 
 def getFunctional(text):
     for line in text:
@@ -395,6 +397,31 @@ def getVersion(text):
             return y[2]
     return None
 
+def getAccuracy(text):
+    listAccuracy = []
+    for line in text:
+        x = re.search(r"estimated scf accuracy", line)
+        if x is not None:
+            y = x.string.split()
+            listAccuracy.append(float(y[4]))
+    
+    return listAccuracy;
+'''
+def getListTimesSCF(text):
+    listTime=[]
+    for line in text:
+        x = re.search(r"total cpu time spent up to now is", line)
+        if x is not None:
+            y = x.string.split()
+            listTime.append(float(y[8]))
+
+    listscf = []
+    for i in range(len(listTime)-1):
+        listscf.append(listTime[i+1]-listTime[i])
+
+    return listscf
+'''
+
 def getNameInput(text):
     for line in text:
         x = re.search(r"Reading input from ", line)
@@ -473,7 +500,7 @@ def getCell(text):
 
     return cell, axes, angles
 
-def dumpXYZfile(data, fname):
+def dumpXYZ(data, fname):
     bohr2angs = 0.529177249
     try:
         with open(fname,"w+") as fout:
@@ -495,9 +522,8 @@ def dumpXYZfile(data, fname):
 
     except IOError as error:
         print('Error to open file: {0}'.format(fname))
-        quit()
 
-def parserQEpwscf(fname):
+def loadQE(fname):
 
     qe = Munch()
     qe.init = Munch()
@@ -510,39 +536,45 @@ def parserQEpwscf(fname):
         with open(fname,"r") as file:
             text = file.readlines()
 
-            qe.profile.tot_cpu_time = get_pwscf_cpu_time(text)
-            qe.profile.tot_wall_time = get_pwscf_wall_time(text)
-            qe.status.done = isJobDone(text)
-            qe.status.iter = getTotalIterations(text)
-            qe.status.scftimes = getListTimesSCF(text)
-            qe.status.nameinp = getNameInput(text)
-            qe.chem.funct = getFunctional(text)
-            qe.chem.natoms = getNumAtomsPerCell(text)
-            qe.chem.nelect = getNumElectrons(text)
-            qe.chem.symb, qe.chem.coors = getGeomChem(text)
-            qe.chem.alat = getLatticeParam(text)
-            qe.chem.cell, qe.chem.axes, qe.chem.angles = getCell(text)
-            #ncores = getNumCores(text)
-            qe.init.nmpi = getMPIprocesses(text)
-            qe.init.nthr = getThreadsPerMPI(text)
-            qe.init.nnodes = getNumNodes(text)
-            qe.profile.init_cpu_time = get_init_cpu_time(text)
-            qe.profile.electrons_cpu_time = get_electrons_cpu_time(text)
-            qe.profile.electrons_wall_time = get_electrons_wall_time(text)
-            qe.profile.cbands_cpu_time = get_cbands_cpu_time(text)
-            qe.profile.cbands_wall_time = get_cbands_wall_time(text)
-            qe.profile.sumband_cpu_time = get_sumband_cpu_time(text)
-            qe.profile.sumband_wall_time = get_sumband_wall_time(text)
-            qe.chem.ecut = getCutOffEnergy(text)
-            qe.chem.dencut = getCutOffDensity(text)
-            qe.init.version = getVersion(text)
-            qe.status.gpuacc = getGPUAcceleration(text)
+            try:
+                qe.status.done = isJobDone(text)
+            except IOError as error:
+                print('The file {0} did not finish correctly!'.format(fname))
+                qe = None
+            else:
+                qe.profile.tot_cpu_time = get_pwscf_cpu_time(text)
+                qe.profile.tot_wall_time = get_pwscf_wall_time(text)
+                qe.status.iter = getTotalIterations(text)
+                qe.status.scftimes = getListTimesSCF(text)
+                qe.status.nameinp = getNameInput(text)
+                accuracy = getAccuracy(text)
+                qe.status.accuracy = accuracy[-1]
+                qe.chem.funct = getFunctional(text)
+                qe.chem.natoms = getNumAtomsPerCell(text)
+                qe.chem.nelect = getNumElectrons(text)
+                qe.chem.symb, qe.chem.coors = getGeomChem(text)
+                qe.chem.alat = getLatticeParam(text)
+                qe.chem.cell, qe.chem.axes, qe.chem.angles = getCell(text)
+                #ncores = getNumCores(text)
+                qe.init.nmpi = getMPIprocesses(text)
+                qe.init.nthr = getThreadsPerMPI(text)
+                qe.init.nnodes = getNumNodes(text)
+                qe.profile.init_cpu_time = get_init_cpu_time(text)
+                qe.profile.electrons_cpu_time = get_electrons_cpu_time(text)
+                qe.profile.electrons_wall_time = get_electrons_wall_time(text)
+                qe.profile.cbands_cpu_time = get_cbands_cpu_time(text)
+                qe.profile.cbands_wall_time = get_cbands_wall_time(text)
+                qe.profile.sumband_cpu_time = get_sumband_cpu_time(text)
+                qe.profile.sumband_wall_time = get_sumband_wall_time(text)
+                qe.chem.ecut = getCutOffEnergy(text)
+                qe.chem.dencut = getCutOffDensity(text)
+                qe.init.version = getVersion(text)
+                qe.status.gpuacc = getGPUAcceleration(text)
 
             #print(qe)
             #print(qe.keys())
     except IOError as error:
         print('Error to open file: {0}'.format(fname))
-        quit()
     else:
        return qe
 
