@@ -548,7 +548,7 @@ def loadQE(fname):
                 qe.status.scftimes = getListTimesSCF(text)
                 qe.status.nameinp = getNameInput(text)
                 accuracy = getAccuracy(text)
-                qe.status.accuracy = accuracy[-1]
+                #qe.status.accuracy = accuracy[-1]
                 qe.chem.funct = getFunctional(text)
                 qe.chem.natoms = getNumAtomsPerCell(text)
                 qe.chem.nelect = getNumElectrons(text)
