@@ -500,6 +500,88 @@ def getCell(text):
 
     return cell, axes, angles
 
+'''
+    Functions to get energies:
+    Fermi Energy in eV
+    Total energy F = E - TS  in Ry
+    Internal Energy :  E = F + TS
+    Smearing Contribution:  TS
+    Energy E is the sum of: One-electron contribution + XC Contribution + Ewald 
+    Dispersion Correction
+'''
+
+def getFermiEnergy(text):
+    for line in text:
+        x = re.search(r"the Fermi energy is", line)
+        if x is not None:
+            y = x.string.split()
+            return float(y[4])
+    return None
+
+def getTotalEnergy(text):
+    for line in text:
+        x = re.search(r"!    total energy", line)
+        if x is not None:
+            y = x.string.split()
+            return float(y[4])
+    return None
+
+def getInternalEnergy(text):
+    for line in text:
+        x = re.search(r"internal energy E\=F\+TS", line)
+        if x is not None:
+            y = x.string.split()
+            return float(y[4])
+    return None
+
+def getSmearingContrib(text):
+    for line in text:
+        x = re.search(r"smearing contrib. \(-TS\)", line)
+        if x is not None:
+            y = x.string.split()
+            return float(y[4])
+    return None
+
+def getOneElectronEnergy(text):
+    for line in text:
+        x = re.search(r"one-electron contribution =", line)
+        if x is not None:
+            y = x.string.split()
+            return float(y[3])
+    return None
+
+def getHartreeEnergy(text):
+    for line in text:
+        x = re.search(r"hartree contribution      =", line)
+        if x is not None:
+            y = x.string.split()
+            return float(y[3])
+    return None
+
+def getXCEnergy(text):
+    for line in text:
+        x = re.search(r"xc contribution           =", line)
+        if x is not None:
+            y = x.string.split()
+            return float(y[3])
+    return None
+
+def getEwaldContrib(text):
+    for line in text:
+        x = re.search(r"ewald contribution        =", line)
+        if x is not None:
+            y = x.string.split()
+            return float(y[3])
+    return None
+
+def getDispersion(text):
+    for line in text:
+        x = re.search(r"Dispersion Correction     =", line)
+        if x is not None:
+            y = x.string.split()
+            return float(y[3])
+    return None
+
 def dumpXYZ(data, fname):
     bohr2angs = 0.529177249
     try:
@@ -530,6 +612,7 @@ def loadQE(fname):
     qe.status = Munch()
     qe.chem = Munch()
     qe.profile = Munch()
+    qe.energy = Munch()
 
     ncores = None
     try:
@@ -538,6 +621,8 @@ def loadQE(fname):
 
             try:
                 qe.status.done = isJobDone(text)
+                if qe.status.done is False:
+                    print('The file {0} did not finish correctly!'.format(fname))
             except IOError as error:
                 print('The file {0} did not finish correctly!'.format(fname))
                 qe = None
@@ -547,7 +632,7 @@ def loadQE(fname):
                 qe.status.iter = getTotalIterations(text)
                 qe.status.scftimes = getListTimesSCF(text)
                 qe.status.nameinp = getNameInput(text)
-                accuracy = getAccuracy(text)
+                qe.accuracy = getAccuracy(text)
                 #qe.status.accuracy = accuracy[-1]
                 qe.chem.funct = getFunctional(text)
                 qe.chem.natoms = getNumAtomsPerCell(text)
@@ -559,6 +644,15 @@ def loadQE(fname):
                 qe.init.nmpi = getMPIprocesses(text)
                 qe.init.nthr = getThreadsPerMPI(text)
                 qe.init.nnodes = getNumNodes(text)
+                qe.energy.fermi = getFermiEnergy(text)
+                qe.energy.total = getTotalEnergy(text)
+                qe.energy.internal = getInternalEnergy(text)
+                qe.energy.smearing = getSmearingContrib(text)
+                qe.energy.hcore = getOneElectronEnergy(text)
+                qe.energy.hartree = getHartreeEnergy(text)
+                qe.energy.xc = getXCEnergy(text)
+                qe.energy.ewald = getEwaldContrib(text)
+                qe.energy.dispersion = getDispersion(text)
                 qe.profile.init_cpu_time = get_init_cpu_time(text)
                 qe.profile.electrons_cpu_time = get_electrons_cpu_time(text)
                 qe.profile.electrons_wall_time = get_electrons_wall_time(text)
@@ -570,7 +664,6 @@ def loadQE(fname):
                 qe.chem.dencut = getCutOffDensity(text)
                 qe.init.version = getVersion(text)
                 qe.status.gpuacc = getGPUAcceleration(text)
-
             #print(qe)
             #print(qe.keys())
     except IOError as error:
@@ -580,45 +673,58 @@ def loadQE(fname):
 
 
 def printQE_info(qe):
-    print(" STATUS")
-    print(" The job is done : ", qe.status.done)
-    print(" Iterations      : ", qe.status.iter)
-    print(" Size in list scf: ", len(qe.status.scftimes))
-    print(" Times in scf    : ", qe.status.scftimes)
-    print(" Name's inp file : ", qe.status.nameinp)
-    print(" Acceleration GPU: ", qe.status.gpuacc)
-    print("")
-
-    print(" INITIALIZATION ")
-    print(" PWSCF Version   : ", qe.init.version)    
-    print(" MPI processes   : ", qe.init.nmpi)
-    print(" Threads / MPI   : ", qe.init.nthr)
-    print(" Num nodes       : ", qe.init.nnodes)
-    #print(" Num cores      : ", ncores)
-    print("")
-
-    print(" CHEMISTRY ")
-    print(" XC Functional   : ", qe.chem.funct)
-    print(" Num of Atoms    : ", qe.chem.natoms)
-    print(" Num electrons   : ", qe.chem.nelect)
-    print(" Cutoff Energy   : ", qe.chem.ecut)
-    print(" Cutoff Density  : ", qe.chem.dencut)
-    print(" List of Symbols : ", qe.chem.symb)
-    print(" List of Coords  : ", qe.chem.coors)
-    print(" Lattice param   : ", qe.chem.alat)
-    print(" Cell param      : ", qe.chem.cell)
-    print(" Cell axes       : ", qe.chem.axes)
-    print(" Cell angles     : ", qe.chem.angles)
-    print("")
-
-    print(" PROFILE TIMING  :")
-    print("   CPU     time  : ", qe.profile.tot_cpu_time)
-    print("   WALL    time  : ", qe.profile.tot_wall_time)
-    print("   Init    time  : ", qe.profile.init_cpu_time)
-    print(" Elecs CPU  time : ", qe.profile.electrons_cpu_time)
-    print(" Elecs Wall time : ", qe.profile.electrons_wall_time)
-    print(" cbands CPU time : ", qe.profile.cbands_cpu_time)
-    print(" cbands Wall time: ", qe.profile.cbands_wall_time)
-    print(" sum ba CPU time : ", qe.profile.sumband_cpu_time)
-    print(" sum ba Wall time: ", qe.profile.sumband_wall_time)
+    if qe.status.done is True:
+        print(" STATUS")
+        print(" The job is done : ", qe.status.done)
+        print(" Iterations      : ", qe.status.iter)
+        print(" Size in list scf: ", len(qe.status.scftimes))
+        print(" Times in scf    : ", qe.status.scftimes)
+        print(" Name's inp file : ", qe.status.nameinp)
+        print(" Acceleration GPU: ", qe.status.gpuacc)
+        print("")
+    
+        print(" INITIALIZATION ")
+        print(" PWSCF Version   : ", qe.init.version)    
+        print(" MPI processes   : ", qe.init.nmpi)
+        print(" Threads / MPI   : ", qe.init.nthr)
+        print(" Num nodes       : ", qe.init.nnodes)
+        #print(" Num cores      : ", ncores)
+        print("")
+    
+        print(" CHEMISTRY ")
+        print(" XC Functional   : ", qe.chem.funct)
+        print(" Num of Atoms    : ", qe.chem.natoms)
+        print(" Num electrons   : ", qe.chem.nelect)
+        print(" Cutoff Energy   : ", qe.chem.ecut)
+        print(" Cutoff Density  : ", qe.chem.dencut)
+        print(" List of Symbols : ", qe.chem.symb)
+        print(" List of Coords  : ", qe.chem.coors)
+        print(" Lattice param   : ", qe.chem.alat)
+        print(" Cell param      : ", qe.chem.cell)
+        print(" Cell axes       : ", qe.chem.axes)
+        print(" Cell angles     : ", qe.chem.angles)
+        print("")
+        
+        print(" ENERGY PROFILE ")
+        print(" Fermi energy    : ", qe.energy.fermi)
+        print(" Total energy    : ", qe.energy.total)
+        print(" Internal energy : ", qe.energy.internal)
+        print(" Smearing contrib: ", qe.energy.smearing)
+        print(" One-electron    : ", qe.energy.hcore)
+        print(" Hartree contrib : ", qe.energy.hartree)
+        print(" XC contrib      : ", qe.energy.xc)
+        print(" Ewald contrib   : ", qe.energy.ewald)
+        print(" Dispersion Corre: ", qe.energy.dispersion)
+        print("")
+    
+        print(" PROFILE TIMING  :")
+        print("   CPU     time  : ", qe.profile.tot_cpu_time)
+        print("   WALL    time  : ", qe.profile.tot_wall_time)
+        print("   Init    time  : ", qe.profile.init_cpu_time)
+        print(" Elecs CPU  time : ", qe.profile.electrons_cpu_time)
+        print(" Elecs Wall time : ", qe.profile.electrons_wall_time)
+        print(" cbands CPU time : ", qe.profile.cbands_cpu_time)
+        print(" cbands Wall time: ", qe.profile.cbands_wall_time)
+        print(" sum ba CPU time : ", qe.profile.sumband_cpu_time)
+        print(" sum ba Wall time: ", qe.profile.sumband_wall_time)
 
