@@ -315,7 +315,7 @@ def isJobDone(text):
         if x is not None:
             done = True
             break
-    
+
     return done
 
 def getFunctional(text):
@@ -404,7 +404,7 @@ def getAccuracy(text):
         if x is not None:
             y = x.string.split()
             listAccuracy.append(float(y[4]))
-    
+
     return listAccuracy;
 '''
 def getListTimesSCF(text):
@@ -506,7 +506,7 @@ def getCell(text):
     Total energy F = E - TS  in Ry
     Internal Energy :  E = F + TS
     Smearing Contribution:  TS
-    Energy E is the sum of: One-electron contribution + XC Contribution + Ewald 
+    Energy E is the sum of: One-electron contribution + XC Contribution + Ewald
     Dispersion Correction
 '''
 
@@ -673,6 +673,10 @@ def loadQE(fname):
 
 
 def printQE_info(qe):
+    if qe is None:
+        print('Error no information')
+        return
+            
     if qe.status.done is True:
         print(" STATUS")
         print(" The job is done : ", qe.status.done)
@@ -682,15 +686,15 @@ def printQE_info(qe):
         print(" Name's inp file : ", qe.status.nameinp)
         print(" Acceleration GPU: ", qe.status.gpuacc)
         print("")
-    
+
         print(" INITIALIZATION ")
-        print(" PWSCF Version   : ", qe.init.version)    
+        print(" PWSCF Version   : ", qe.init.version)
         print(" MPI processes   : ", qe.init.nmpi)
         print(" Threads / MPI   : ", qe.init.nthr)
         print(" Num nodes       : ", qe.init.nnodes)
         #print(" Num cores      : ", ncores)
         print("")
-    
+
         print(" CHEMISTRY ")
         print(" XC Functional   : ", qe.chem.funct)
         print(" Num of Atoms    : ", qe.chem.natoms)
@@ -704,7 +708,7 @@ def printQE_info(qe):
         print(" Cell axes       : ", qe.chem.axes)
         print(" Cell angles     : ", qe.chem.angles)
         print("")
-        
+
         print(" ENERGY PROFILE ")
         print(" Fermi energy    : ", qe.energy.fermi)
         print(" Total energy    : ", qe.energy.total)
@@ -716,7 +720,7 @@ def printQE_info(qe):
         print(" Ewald contrib   : ", qe.energy.ewald)
         print(" Dispersion Corre: ", qe.energy.dispersion)
         print("")
-    
+
         print(" PROFILE TIMING  :")
         print("   CPU     time  : ", qe.profile.tot_cpu_time)
         print("   WALL    time  : ", qe.profile.tot_wall_time)
