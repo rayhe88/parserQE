@@ -1,0 +1,39 @@
+# Input generator
+title "My Title"
+
+echo
+
+start c_atom_pbe
+
+memory  1900 mb
+
+permanent_dir ./perm
+scratch_dir   ./perm
+
+charge 0
+
+geometry noautosym nocenter noautoz
+system crystal
+   lattice_vectors
+        28.3459        0.0        0.0
+            0.0    28.3459        0.0
+            0.0        0.0    28.3459
+end
+ C     0.000000   0.000000   0.000000
+end
+
+nwpw
+   monkhorst-pack 1 1 1
+   cutoff 60.0
+   mult 1
+   xc pbe96
+   lmbfgs grassman
+
+   2d-hcurve
+ end
+
+set nwpw:kbpp_ray     .true.
+set nwpw:kbpp_filter  .true.
+
+task pspw energy ignore
+
